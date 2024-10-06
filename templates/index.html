@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farm Management Application</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@100;300;400;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: "Lato", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-image: url("{{ url_for('static', filename='images/land1.jpg') }}"); 
+            background-size: cover; 
+            background-position: center; 
+            background-repeat: no-repeat; 
+            height: 100vh;
+            display: flex;
+            flex-direction: column; 
+            align-items: center; 
+        }
+        header {
+            background-color: rgba(76, 175, 80, 0.8);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        #container {
+            display: flex;
+            flex-direction: row; 
+            width: 100%; 
+            max-width: 1200px; 
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            overflow: hidden; 
+            margin-top: 20px;
+            height: 80vh; 
+
+        }
+        #sidebar {
+            width: 35%; /* Sidebar width */
+            padding: 15px;
+            border-right: 2px solid #ccc;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            overflow-y: auto; /* Enable scrolling for sidebar if content exceeds height */
+        }
+        #map {
+            flex: 1; 
+            height: 100%; 
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Responsive grid */
+            gap: 10px; 
+            max-height: 400px; 
+            overflow-y: auto;
+            margin-top: 15px;
+            display: none; 
+        }
+        .grid-item {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; 
+            align-items: center;
+            font-weight: bold;
+            font-size: 14px; 
+        }
+        .icon {
+            font-size: 30px; 
+        }
+        .bar {
+            width: 100%;
+            height: 20px;
+            background-color: #4CAF50; 
+            margin-top: 5px;
+            border-radius: 5px;
+        }
+        .yield-quality {
+            width: 30%; 
+            background-color: #dc3545; 
+        }
+        .leaflet-popup {
+            border-radius: 5px;
+        }
+        .marker-icon {
+            font-size: 30px;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            #container {
+            display: flex;
+            flex-direction: column; /* Stack elements vertically */
+            width: 100%; 
+            max-width: 1200px; 
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            overflow: hidden; 
+            margin-top: 20px;
+        }
+        #sidebar {
+            width: 100%; /* Full width on mobile */
+            padding: 8px;
+            border-bottom: 2px solid #ccc; /* Add bottom border */
+            font-size: 13px;
+        }
+        #map {
+            height: 300px; /* Fixed height for the map */
+            width: 100%; /* Full width on mobile */
+        }
+        .grid-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 2px;
+            margin-top: 5px;
+        }
+        .grid-item {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            height: 80px; 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; 
+            align-items: center;
+            font-weight: bold;
+            font-size: 14px;
+            flex: 1; 
+        }
+        .bar {
+            width: 100%;
+            height: 20px;
+            background-color: #4CAF50; 
+            margin-top: 5px;
+            border-radius: 5px;
+        }
+        .yield-quality {
+            width: 30%; 
+            background-color: #dc3545; 
+        }
+        .leaflet-popup {
+            border-radius: 5px;
+        }
+        .marker-icon {
+            font-size: 15px;
+        }
+
+        
+        .grid-item:nth-child(4),
+        .grid-item:nth-child(5) {
+            grid-column: span 3; 
+        }
+
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>FarmIQ Dashboard</h1>
+    </header>
+    <div id="container">
+       	 <div id="map"></div>
+
+        <div id="sidebar">
+            <h3>Tools</h3>
+            <p>Leveraging Earth Observation Data for Informed Agricultural Decision-Making:<br>
+                Farmers face challenges from unpredictable weather, pests, and diseases impacting crop health and food security. This tool allows farmers to analyze NASA datasets, enabling informed decisions to tackle water-related issues and improve agricultural practices.</p>
+            
+            <p><strong>Click on your position to find your Current Farm Conditions</strong></p>
+
+
+            <div class="grid-container" id="farmConditions">
+                <div class="grid-item water">
+                    <i class="fas fa-tint icon"></i>
+                    <strong>Water Availability:</strong> <span id="waterAvailability">Loading...</span>
+                    <div class="bar" id="waterBar"></div>
+                </div>
+                <div class="grid-item soil">
+                    <i class="fas fa-seedling icon"></i>
+                    <strong>Soil Condition:</strong> <span id="soilCondition">Loading...</span>
+                    <div class="bar" id="soilBar"></div>
+                </div>
+                <div class="grid-item crop">
+                    <i class="fas fa-seedling icon"></i>
+                    <strong>Crop Health:</strong> <span id="cropHealth">Loading...</span>
+                    <div class="bar" id="cropBar"></div>
+                </div>
+                <div class="grid-item frost">
+                    <i class="fas fa-snowflake icon"></i>
+                    <strong>Frost Risk:</strong> <span id="frostRisk">Loading...</span>
+                    <div class="bar" id="frostBar"></div>
+                </div>
+                <div class="grid-item yield">
+                    <i class="fas fa-chart-line icon"></i>
+                    <strong>Yield Quality:</strong> <span id="yieldQuality">Loading...</span>
+                    <div class="bar yield-quality" id="yieldBar"></div>
+                </div>
+            </div>
+	
+        </div>
+
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('map').setView([53.3498, -6.2603], 8);
+        var currentMarker = null; // Marker for current location
+        var pinMarkers = []; // Array to store dropped pins
+        var hoverPopup = L.popup(); // Popup for hover information
+
+        // Initial tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        async function fetchFarmConditions(lat, lng) {
+            const apiUrl = `/predict`;  // Update with your Cloud Run service URL
+            
+            const data = {
+                latitude: lat,
+                longitude: lng
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const prediction = await response.json();
+                return prediction; 
+            } catch (error) {
+                console.error('Error fetching farm conditions:', error);
+                return null; 
+            }
+        }
+
+        function updateSidebar(data) {
+            const prediction = data.prediction;
+            document.getElementById("waterAvailability").textContent = prediction['Water Availability'];
+            let waterBarInfo = getBarWidth(prediction['Water Availability']); 
+            document.getElementById("waterBar").style.width = waterBarInfo.width; 
+            document.getElementById("waterBar").style.backgroundColor = waterBarInfo.color;
+
+            document.getElementById("soilCondition").textContent = prediction['Soil Condition'];
+            let soilBarInfo = getBarWidth(prediction['Soil Condition']);
+            document.getElementById("soilBar").style.width = soilBarInfo.width; 
+            document.getElementById("soilBar").style.backgroundColor = soilBarInfo.color;
+
+            document.getElementById("cropHealth").textContent = prediction['Crop Health'];
+            let cropBarInfo = getBarWidth(prediction['Crop Health']);
+            document.getElementById("cropBar").style.width = cropBarInfo.width; 
+            document.getElementById("cropBar").style.backgroundColor = cropBarInfo.color;
+
+            document.getElementById("frostRisk").textContent = prediction['Frost Risk'];
+            let frostBarInfo = getBarWidth(prediction['Frost Risk']);
+            document.getElementById("frostBar").style.width = frostBarInfo.width; 
+            document.getElementById("frostBar").style.backgroundColor = frostBarInfo.color;
+
+            document.getElementById("yieldQuality").textContent = prediction['Yield Quality'];
+            document.getElementById("yieldBar").style.width = prediction['Yield Quality']; 
+            document.getElementById("yieldBar").style.backgroundColor = getYieldBarColor(prediction['Yield Quality']);
+        }
+
+        function getYieldBarColor(yieldQuality) {
+            const value = parseFloat(yieldQuality);
+            if (value >= 80) return "green";
+            else if (value >= 20) return "yellow";
+            else return "red";
+        }
+
+        function getBarWidth(condition) {
+            let width;
+            let color;
+
+            switch (condition) {
+                case "Good": 
+                    width = "80%"; 
+                    color = "green"; 
+                    break;
+                case "Optimal": 
+                    width = "60%"; 
+                    color = "yellow"; 
+                    break;
+                case "Average": 
+                    width = "40%"; 
+                    color = "yellow"; 
+                    break;
+                case "Low": 
+                    width = "20%"; 
+                    color = "red"; 
+                    break;
+                case "Poor": 
+                    width = "10%"; 
+                    color = "red"; 
+                    break;
+                case "Below Average": 
+                    width = "30%"; 
+                    color = "yellow"; 
+                    break;
+                case "High": 
+                    width = "5%"; 
+                    color = "red"; 
+                    break;
+                case "Dry": 
+                    width = "15%"; 
+                    color = "red"; 
+                    break;
+                default: 
+                    width = "0%"; 
+                    color = "gray"; 
+                    break;
+            }
+
+            return {
+                width: width,
+                color: color
+            };
+        }
+
+        window.onload = function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+                        map.setView([latitude, longitude], 13); 
+
+                        currentMarker = L.marker([latitude, longitude]).addTo(map);
+                        pinMarkers.push(currentMarker); 
+
+                        fetchFarmConditions(latitude, longitude).then(updateSidebar);
+                        document.getElementById('farmConditions').style.display = 'grid';
+                    },
+                    function(error) {
+                        console.error('Error fetching location:', error);
+                        fetchFarmConditions(53.3498, -6.2603).then(updateSidebar);
+                    }
+                );
+            } else {
+                console.error('Geolocation is not supported by this browser.');
+                fetchFarmConditions(53.3498, -6.2603).then(updateSidebar);
+            }
+        };
+
+        map.on('click', function(e) {
+            if (currentMarker) {
+                map.removeLayer(currentMarker);
+            }
+
+            currentMarker = L.marker(e.latlng).addTo(map);
+            pinMarkers.push(currentMarker); 
+
+            fetchFarmConditions(e.latlng.lat, e.latlng.lng).then(updateSidebar);
+            document.getElementById('farmConditions').style.display = 'grid';
+        });
+
+        map.on('mousemove', function(e) {
+            var lat = e.latlng.lat.toFixed(5);
+            var lng = e.latlng.lng.toFixed(5);
+            hoverPopup.setLatLng(e.latlng)
+                .setContent(`
+                    <div style="color: black; background-color: white; border-radius: 5px; padding: 5px;">
+                        Latitude: ${lat}<br>Longitude: ${lng}
+                    </div>
+                `)
+                .openOn(map);
+        });
+
+        map.on('mouseout', function() {
+            map.closePopup();
+        });
+    </script>
+
+</body>
+</html>
