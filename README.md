@@ -25,7 +25,7 @@ Before you begin, ensure you have the following installed on your local machine:
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/<your-username>/nasa_hackathon.git
+git clone https://github.com/tramya16/nasa_hackathon.git
 cd nasa_hackathon
 ```
 
@@ -51,7 +51,7 @@ To run the application without Docker:
    flask run
    ```
 
-The app should now be running on `http://127.0.0.1:5000/`.
+The app should now be running on `http://127.0.0.1:8080/`.
 
 ## Running the Application with Docker
 
