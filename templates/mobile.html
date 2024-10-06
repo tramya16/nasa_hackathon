@@ -1,0 +1,35 @@
+    <div id="container">
+        <div id="sidebar">
+            <h3>Tools</h3>
+            <p>Leveraging Earth Observation Data for Informed Agricultural Decision-Making:<br>
+                Farmers face challenges from weather, pests, and diseases affecting crops. This tool uses NASA datasets to help them make informed decisions.</p>
+            <p><strong>Click on your position to find your Current Farm Conditions</strong></p>
+        </div>
+        <div id="map"></div>
+        <div id="farmConditions" style="display: none;">
+            <div class="grid-container">
+                <div class="grid-item water">
+                    <strong>Water Availability:</strong> <span id="waterAvailability">Loading...</span>
+                    <div class="bar" id="waterBar"></div>
+                </div>
+                <div class="grid-item soil">
+                    <strong>Soil Condition:</strong> <span id="soilCondition">Loading...</span>
+                    <div class="bar" id="soilBar"></div>
+                </div>
+                <div class="grid-item crop">
+                    <strong>Crop Health:</strong> <span id="cropHealth">Loading...</span>
+                    <div class="bar" id="cropBar"></div>
+                </div>
+            </div>
+            <div class="grid-container">
+                <div class="grid-item frost">
+                    <strong>Frost Risk:</strong> <span id="frostRisk">Loading...</span>
+                    <div class="bar" id="frostBar"></div>
+                </div>
+                <div class="grid-item yield">
+                    <strong>Yield Quality:</strong> <span id="yieldQuality">Loading...</span>
+                    <div class="bar yield-quality" id="yieldBar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
