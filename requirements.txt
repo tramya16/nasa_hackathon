@@ -1,0 +1,9 @@
+numpy==1.26.4
+tensorflow
+gunicorn==20.1.0
+Flask==2.3.2
+Werkzeug==3.0.1
+Flask-Cors
+joblib
+pandas
+scikit-learn
